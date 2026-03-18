@@ -3,7 +3,7 @@ import os
 
 directory_path = '../data/'
 df = pd.DataFrame()
-
+#
 with os.scandir(directory_path) as batches:
     for batch in batches:
         #print(len(pd.read_csv(batch)))
