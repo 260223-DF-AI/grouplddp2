@@ -3,6 +3,8 @@ import os
 import gcsfs
 from dotenv import load_dotenv
 
+loaded = load_dotenv()
+
 load_dotenv()
 
 #uri to the bucket location to put file
@@ -28,7 +30,7 @@ with os.scandir(directory_path) as batches:
 
 #upload to cloud storage
 try:
-    df.to_parquet(gcs_uri, engine='pyarrow')
+    df.to_parquet(gcs_uri, engine='pyarrow', storage_options={"token": gc_auth})
     print(f"Parquet saved to {gcs_uri}")
 except Exception as e:
     print(f"An error occurred: {e}")
