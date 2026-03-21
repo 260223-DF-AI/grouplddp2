@@ -1,3 +1,4 @@
+## example code from lecture
 from fastapi import APIRouter, HTTPException
 
 # "/"
