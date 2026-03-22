@@ -1,4 +1,4 @@
-# GroupLDD - Ramen Ratings Data Analysis
+# GroupLDD - P2
 ## Set-up Guide:
 In terminal:
     python -m venv venv
@@ -7,4 +7,4 @@ In terminal:
     pip install -r requirements.txt
 
 ## Dev Tips:
-Show API in Browser:localhost/{port_num}/docs
+To Show API in Browser: localhost/{port_num}/docs

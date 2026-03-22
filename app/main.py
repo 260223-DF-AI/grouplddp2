@@ -1,3 +1,4 @@
+## example code from Rich's lecture
 from fastapi import FastAPI
 from app.routers import example_route
 
