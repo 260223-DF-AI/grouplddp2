@@ -2,9 +2,48 @@ from datetime import datetime
 import re
 
 class SalesData():
-    NUM_OF_COLS = 18
+    """Class to convert and validate field types of sales transaction data
 
-    def __init__(self, transaction_id, date, store_id, store_location, region, state, customer_id, customer_name, segment, product_id, product_name, category, subcategory, quantity, unit_price, discount_percent, tax_amount, shipping_cost, total_amount):
+    Raises:
+        ValueError: If row does not match expected number of columns
+        ValueError: If field type is incorrect
+
+    Returns:
+        SalesData: Object with correct field types
+    """
+    columns = [
+        "transaction_id",
+        "date",
+        "store_id",
+        "store_location",
+        "region",
+        "state",
+        "customer_id",
+        "customer_name",
+        "segment",
+        "product_id",
+        "product_name",
+        "category",
+        "subcategory",
+        "quantity",
+        "unit_price",
+        "discount_percent",
+        "tax_amount",
+        "shipping_cost",
+        "total_amount"
+    ]
+    
+    NUM_OF_COLS = len(columns)
+    
+    ID_PATTERNS = {
+    "S": re.compile(r"S\d{3}"),
+    "C": re.compile(r"C\d{3}"),
+    "P": re.compile(r"P\d{3}")
+    }
+
+    def __init__(self, transaction_id, date, store_id, store_location, region, state, customer_id, 
+                customer_name, segment, product_id, product_name, category, subcategory, quantity, 
+                unit_price, discount_percent, tax_amount, shipping_cost, total_amount):
         self.transaction_id = transaction_id 
         self.date = date
         self.store_id = store_id
@@ -26,7 +65,19 @@ class SalesData():
         self.total_amount = total_amount
     
     @classmethod
-    def convert_csv_types(cls, row):
+    def convert_csv_types(cls: SalesData, row: list[str]) -> SalesData:
+        """Factory method to convert types and format field values
+
+        Args:
+            cls (SalesData): Class object
+            row (list[str]): .csv row to be validated
+
+        Raises:
+            ValueError: If row does not match expected number of columns 
+
+        Returns:
+            SalesData: Class object with cleaned values
+        """
         if len(row) != cls.NUM_OF_COLS:
             raise ValueError(f"Expected {cls.NUM_OF_COLS} fields, received {len(row)}")
         
@@ -35,11 +86,11 @@ class SalesData():
         store_id = row[2].strip() # validate format: S001 - start w/ S then 3 [0-9]
         store_location = row[3].strip()
         region = row[4].strip()
-        state = row[5].strip()
+        state = row[5].strip().upper()
         customer_id = row[6].strip() # validate format: C001 - start w/ C then 3 [0-9]
         customer_name = row[7].strip()
         segment = row[8].strip()
-        product_id = row[9].strip # validate format: P001 - start w/ P then 3 [0-9]
+        product_id = row[9].strip() # validate format: P001 - start w/ P then 3 [0-9]
         product_name = row[10].strip()
         category = row[11].strip()
         subcategory = row[12].strip()
@@ -50,10 +101,17 @@ class SalesData():
         shipping_cost = float(row[17])
         total_amount = float(row[18])
         
-        return cls(transaction_id, date, store_id, store_location, region, state, customer_id, customer_name, segment, product_id, product_name, category, subcategory, quantity, unit_price, discount_percent, tax_amount, shipping_cost, total_amount)
+        return cls(transaction_id, date, store_id, store_location, region, state, customer_id, customer_name, 
+                segment, product_id, product_name, category, subcategory, quantity, unit_price, discount_percent, 
+                tax_amount, shipping_cost, total_amount)
     
-    def to_row(self):
-        self._validate()
+    def to_row(self) -> tuple:
+        """Converts class object into tuple of attribute values.
+
+        Returns:
+            tuple: returns row values as tuple
+        """
+        # self._validate() # Commented out for efficiency
         
         return (
             self.transaction_id,
@@ -78,16 +136,11 @@ class SalesData():
         )
     
     def _validate(self):
-        if self.date > datetime.now().date():
+        """Left function in as example - current data sets to not need validation beyond type conversion"""
+        if self.date > datetime.now():
             raise ValueError(f"Date must be equal to or prior than toady's date: {datetime.now().date()}")
-        if self.store_id:
-            pass # match format check
-        if self.region not in ['North', 'South', 'East', 'West', 'Midwest']:
-            raise ValueError(f"Invalid region: {self.region}")
-        if self.state:
-            pass # look for lib to validate stare abbr
-        if self.customer_id:
-            pass # match format check
+        if len(self.state) != 2:
+            raise ValueError(f"State must be in abbreviated format.")
         if self.quantity <= 0:
             raise ValueError("Quantity must be greater than 0")
         if self.discount_percent > 1 :
@@ -107,5 +160,5 @@ class SalesData():
             raise ValueError(f"{name} cannot be negative")
     
     def _validate_id(self, value, char):
-        if not re.fullmatch(fr'{char}\d{3}', value):
-            raise ValueError(f"Invalid ID. Proper format: 'X123")
+        if not self.ID_PATTERNS[char].fullmatch(value):
+            raise ValueError(f"Invalid ID: {value}. Proper format: '{char}123'")

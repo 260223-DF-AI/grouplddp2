@@ -2,6 +2,7 @@
 /shelf/
 /workspace.xml
 venv/
+__pycache__
 # Editor-based HTTP Client requests
 /httpRequests/
 .idea/
