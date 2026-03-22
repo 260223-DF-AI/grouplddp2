@@ -44,9 +44,7 @@ def _validate_csv(input_path: str) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: DataFrame of valid records
-    """
-    df = pd.DataFrame()
-    
+    """    
     with open(input_path, newline='') as infile:
         reader = csv.reader(infile)
         next(reader)  # skip header row
