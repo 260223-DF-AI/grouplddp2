@@ -35,3 +35,4 @@ async def process_gcs_file(request: GCSPathRequest):
         "status": "success",
         "message": f"Processing file at {path}"
     }
+
