@@ -1,4 +1,4 @@
-# GroupLDD - Ramen Ratings Data Analysis
+# GroupLDD - P2
 ## Set-up Guide:
 In terminal:
     python -m venv venv
