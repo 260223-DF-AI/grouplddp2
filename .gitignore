@@ -1,6 +1,7 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+credentials/
 venv/
 __pycache__
 # Editor-based HTTP Client requests

@@ -1,6 +1,13 @@
+## 03/23/26
+Dylan
+    Done - Implemented FastAPI
+    Will do - Add duplication guard and streaming buffers to GCS
+Danielle
+    Done - Implemented data validaition and
+Lucas
 ## 03/20/26
 Dylan
-    Will do - design API *dependent on Lucas's schema task completion
+    Will do - design API
 Danielle
     Done - Reviewed code and updated Kanban board, messaged team to discuss task division
     Will do - work on error handling and logging

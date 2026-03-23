@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.routers import example_route, queryrouter
+from app.routers import queryrouter
 
 app = FastAPI(
     title= "BigQuery API",
