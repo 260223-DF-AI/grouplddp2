@@ -3,8 +3,10 @@ Dylan
     Done - Implemented FastAPI
     Will do - Add duplication guard and streaming buffers to GCS
 Danielle
-    Done - Implemented data validaition and
+    Done - Implemented data validation and error logging
+    Will do - Make benchmarking report
 Lucas
+    Will do - dynamically create schema for BigQuery, refactor main.py
 ## 03/20/26
 Dylan
     Will do - design API
