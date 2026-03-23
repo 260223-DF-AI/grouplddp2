@@ -1,5 +1,4 @@
 import os
-
 from fastapi import APIRouter, HTTPException
 from google.cloud import bigquery
 from dotenv import load_dotenv

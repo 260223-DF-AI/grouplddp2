@@ -3,12 +3,14 @@ Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage
 """
 from models.sales_data import SalesData
 from models.logger import get_logger
+from models.benchmarking_report import BenchmarkData
 from dotenv import load_dotenv
 import pandas as pd
 import csv
 import os
 
-logger = get_logger(__name__)
+logger = get_logger(__name__, 'error.log')
+reporter = BenchmarkData()
 
 def main():
     """Creates and uploads .parquet file to GCS
@@ -31,8 +33,9 @@ def main():
 
     # upload .parquet to Google Cloud Storage
     try:
-        data.to_parquet(gcs_uri, engine='pyarrow')
+        reporter.get_upload_speed(data.to_parquet)(gcs_uri, engine="pyarrow") # uploads file and measures time of operation
         logger.info(f"Parquet saved to {gcs_uri}")
+        reporter.set_parquet_size(gcs_uri) # fetches file size using pyarrow, and sets to reporter obj
     except Exception as e:
         logger.error(f"An error occurred: {e}")
 
@@ -68,12 +71,14 @@ def _read_and_clean_data() -> pd.DataFrame:
     """
     directory_path = '../data/'
     df = pd.DataFrame()
-    # combine multiple .csv files
+    total_csv_size = 0
+    # combine multiple .csv files to single df
     with os.scandir(directory_path) as batches:
         for batch in batches:
             if batch.name.endswith('.csv'):
+                total_csv_size += os.path.getsize(batch) # sum up sizes of .csv files
                 logger.info(f"Validating file: {batch.path}")
-                cleaned_batch = _validate_csv(batch.path)
+                cleaned_batch = _validate_csv(batch.path) # cleans data
                 
                 if df.empty:
                     df = cleaned_batch
@@ -82,6 +87,8 @@ def _read_and_clean_data() -> pd.DataFrame:
             else:
                 print(f"{batch.name} is not a csv")
                 break
+            
+    reporter.set_csv_size(total_csv_size)
     return df
 
 if __name__ == "__main__":
