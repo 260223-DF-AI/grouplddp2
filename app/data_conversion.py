@@ -8,81 +8,83 @@ import pandas as pd
 import csv
 import os
 
-logger = get_logger(__name__)
+class DataConversion:
 
-def main():
-    """Creates and uploads .parquet file to GCS
-    """
-    load_dotenv() # get environment variables
+    logger = get_logger(__name__)
+    gcs_uri = None
+    gc_auth = None
 
-    # uri to the GCS bucket location
-    gcs_uri = os.getenv("GCS_URI")
-    # path to the file with your GCS credentials
-    gc_auth = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-    if gcs_uri is None:
-        logger.error("GCS_URI environment variable not found. Check .env file and README.md for setup help.")
-    if gc_auth is None:
-        logger.error("GOOGLE_APPLICATION_CREDENTIALS environment variable not found. Check .env file and README.md for setup help.")
+    def set_up_environment(self):
+        """ Sets up the environment"""
 
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gc_auth
+        load_dotenv()
 
-    data = _read_and_clean_data()
+        # uri to the GCS bucket location
+        gcs_uri = os.getenv("GCS_URI")
+        # path to the file with your GCS credentials
+        gc_auth = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-    # upload .parquet to Google Cloud Storage
-    try:
-        data.to_parquet(gcs_uri, engine='pyarrow')
-        logger.info(f"Parquet saved to {gcs_uri}")
-    except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        if gcs_uri is None:
+            self.logger.error("GCS_URI environment variable not found. Check .env file and README.md for setup help.")
+        if gc_auth is None:
+            self.logger.error(
+                "GOOGLE_APPLICATION_CREDENTIALS environment variable not found. Check .env file and README.md for setup help.")
 
-def _validate_csv(input_path: str) -> pd.DataFrame:
-    """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gc_auth
 
-    Args:
-        input_path (str): .csv file path
+    def upload_to_gcs(self):
+        """ Uploads .csv file to GCS"""
+        try:
+            self._read_and_clean_data().to_parquet(self.gcs_uri, engine='pyarrow')
+            self.logger.info(f"Parquet saved to {self.gcs_uri}")
+        except Exception as e:
+            self.logger.error(f"An error occurred: {e}")
 
-    Returns:
-        pd.DataFrame: DataFrame of valid records
-    """
-    with open(input_path, newline='') as infile:
-        reader = csv.reader(infile)
-        next(reader)  # skip header row
-        rows = []
+    def _validate_csv(self, input_path: str) -> pd.DataFrame:
+        """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
 
-        for row in reader:
-            try:
-                record = SalesData.convert_csv_types(row) # convert fields to types of SalesData model
-                rows.append(record.to_row()) # adds valid record to list
+        Args:
+            input_path (str): .csv file path
 
-            except Exception as e:
-                logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
+        Returns:
+            pd.DataFrame: DataFrame of valid records
+        """
+        with open(input_path, newline='') as infile:
+            reader = csv.reader(infile)
+            next(reader)  # skip header row
+            rows = []
 
-    return pd.DataFrame(rows, columns=SalesData.columns)
+            for row in reader:
+                try:
+                    record = SalesData.convert_csv_types(row) # convert fields to types of SalesData model
+                    rows.append(record.to_row()) # adds valid record to list
 
-def _read_and_clean_data() -> pd.DataFrame:
-    """ Helper function to read .csv files from ../data/, cleans the data and return as a DataFrame
+                except Exception as e:
+                    self.logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
 
-    Returns:
-        pd.DataFrame: .csv data cleaned and validated
-    """
-    directory_path = '../data/'
-    df = pd.DataFrame()
-    # combine multiple .csv files
-    with os.scandir(directory_path) as batches:
-        for batch in batches:
-            if batch.name.endswith('.csv'):
-                logger.info(f"Validating file: {batch.path}")
-                cleaned_batch = _validate_csv(batch.path)
+        return pd.DataFrame(rows, columns=SalesData.columns)
 
-                if df.empty:
-                    df = cleaned_batch
+    def _read_and_clean_data(self) -> pd.DataFrame:
+        """ Helper function to read .csv files from ../data/, cleans the data and return as a DataFrame
+
+        Returns:
+            pd.DataFrame: .csv data cleaned and validated
+        """
+        directory_path = '../data/'
+        df = pd.DataFrame()
+        # combine multiple .csv files
+        with os.scandir(directory_path) as batches:
+            for batch in batches:
+                if batch.name.endswith('.csv'):
+                    self.logger.info(f"Validating file: {batch.path}")
+                    cleaned_batch = self._validate_csv(batch.path)
+
+                    if df.empty:
+                        df = cleaned_batch
+                    else:
+                        df = pd.concat([df, cleaned_batch])
                 else:
-                    df = pd.concat([df, cleaned_batch])
-            else:
-                print(f"{batch.name} is not a csv")
-                break
-    return df
-
-if __name__ == "__main__":
-    main()
+                    print(f"{batch.name} is not a csv")
+                    break
+        return df
