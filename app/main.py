@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from routers import queryrouter
 from instances import reporter
-from data_conversion import DataConversion
+from app.services.gcs import GCS
 
 app = FastAPI(
     title= "BigQuery API",
@@ -38,8 +38,8 @@ async def process_gcs_file(request: GCSPathRequest):
 def main():
     """Creates and uploads .parquet files to GCS
     """
-    dc = DataConversion()
-    dc.upload_csvs_as_parquet()
+    gcs = GCS()
+    gcs.upload_csvs_as_parquet()
     
     reporter.create_audit_log()
 
