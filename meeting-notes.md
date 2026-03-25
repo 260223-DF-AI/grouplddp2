@@ -1,44 +1,43 @@
+## 03/25/26
+| Team Member | Done | Will do
+|----|----|----|
+|Dylan| Updated current query | testing, more queries
+|Danielle| Reviewed code | Finish benchmarking report, add check for null values
+|Lucas| Refactored main.py | Adding buffers
+
+## 03/24/26
+| Team Member | Done | Will do
+|----|----|----|
+| Dylan | Researched checksum guard, found it's implicit in to_parquet() | Expand on BigQuery API implementation |
+| Danielle | Started benchmarking report code | Finish report, waiting on query finalization |
+| Lucas | Researched dynamic schema, found it's implicit. Refactored data_conversion.py to class format |  Work on streaming buffers |
 ## 03/23/26
-Dylan
-    Done - Implemented FastAPI
-    Will do - Add duplication guard and streaming buffers to GCS
-Danielle
-    Done - Implemented data validation and error logging
-    Will do - Make benchmarking report
-Lucas
-    Will do - dynamically create schema for BigQuery, refactor main.py
+| Team Member | Done | Will do
+|----|----|----|
+| Dylan | Implemented FastAPI | Add duplication guard and streaming buffers to GCS
+| Danielle | Implemented data validation and error logging | Make benchmarking report
+| Lucas |  - | Dynamically create schema for BigQuery, refactor main.py 
 ## 03/20/26
-Dylan
-    Will do - design API
-Danielle
-    Done - Reviewed code and updated Kanban board, messaged team to discuss task division
-    Will do - work on error handling and logging
-Lucas
-    Done - added arg to to_parquet for tokens, and updated README w/ GCS instructions
-    Will do - dynamically create schema for BgQuery
+| Team Member | Done | Will do
+|----|----|----|
+| Dylan | - | Design API
+| Danielle | Reviewed code and updated Kanban board, messaged team to discuss task division | Work on error handling and logging
+| Lucas | added arg to to_parquet for tokens, and updated README w/ GCS instructions | Dynamically create schema for BgQuery
 
 ## 03/19/26
-All: created GCS bucket and ran our code
-Dylan
-    Done - Added code to connect to GCS
-    Will do - Help teammates with GCS setup
-    Blockers - Figuring our permissions in GCS
-Danielle
-    Will do - Review code, update Kanban board to make sure we achieve project goals
-Lucas
-    Done - Added code to concat .csvs into a DataFrame and transform said DataFrame to .parquet
-    Will do - Create documentation for GCS setup
+Group: created GCS bucket and ran our code
+| Team Member | Done | Will do | Blockers
+|----|----|----|----|
+| Dylan | Added code to connect to GCS | Help teammates with GCS setup | Figuring our permissions in GCS
+| Danielle | - | Review code, update Kanban board to make sure we achieve project goals | - 
+| Lucas | Added code to concat .csvs into a DataFrame and transform said DataFrame to .parquet | Create documentation for GCS setup | -
 
 ## 03/18/26
-Dylan
-    Will do - Create GCS bucket, research how-to create connection to our data
-Danielle
-    Done - Updated project file structure
-    Will do - Update our Kanban board, review code when finished
-Lucas 
-    Done - Created Git branches for each team member
-    Will do - Take lead on reading in data and putting into parquet files
+| Team Member | Done | Will do
+|----|----|----|
+| Dylan | - | Create GCS bucket, research how-to create connection to our data
+| Danielle | Updated project file structure | Update our Kanban board, review code when finished
+| Lucas | Created Git branches for each team member | Take lead on reading in data and putting into parquet files
 
 ## 03/17/26
-Group: 
-    Discussed project requirements and set up our environment.
+Group: Discussed project requirements and set up our environment.
