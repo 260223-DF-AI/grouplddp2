@@ -40,7 +40,7 @@ async def process_gcs_file(request: GCSPathRequest):
     }
 
 def main():
-    """Creates and uploads .parquet file to GCS
+    """Creates and uploads .parquet files to GCS
     """
     dc = DataConversion()
     dc.upload_csvs_as_parquet()
