@@ -50,28 +50,6 @@ class DataConversion:
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
 
-    def _validate_csv(self, input_path: str) -> pd.DataFrame:
-        """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
-
-        Args:
-            input_path (str): .csv file path
-
-        Returns:
-            pd.DataFrame: DataFrame of valid records
-        """
-        with open(input_path, newline='') as infile:
-            reader = csv.reader(infile)
-            next(reader)  # skip header row
-            rows = []
-
-            for row in reader:
-                try:
-                    record = SalesData.convert_csv_types(row) # convert fields to types of SalesData model
-                    rows.append(record.to_row()) # adds valid record to list
-
-                except Exception as e:
-                    self.logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
-
         return pd.DataFrame(rows, columns=SalesData.columns)
 
     def upload_csvs_as_parquet(self):
@@ -95,3 +73,25 @@ class DataConversion:
                     self.logger.info(f"Uploaded {gcs_file_uri}")
                 else:
                     self.logger.info(f"Skipping non-CSV file: {batch.name}")
+                    
+    def _validate_csv(self, input_path: str) -> pd.DataFrame:
+        """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
+
+        Args:
+            input_path (str): .csv file path
+
+        Returns:
+            pd.DataFrame: DataFrame of valid records
+        """
+        with open(input_path, newline='') as infile:
+            reader = csv.reader(infile)
+            next(reader)  # skip header row
+            rows = []
+
+            for row in reader:
+                try:
+                    record = SalesData.convert_csv_types(row) # convert fields to types of SalesData model
+                    rows.append(record.to_row()) # adds valid record to list
+
+                except Exception as e:
+                    self.logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
