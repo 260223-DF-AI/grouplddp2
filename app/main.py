@@ -47,8 +47,7 @@ def main():
     """Creates and uploads .parquet file to GCS
     """
     dc = DataConversion()
-    dc.set_up_environment()
-    dc.upload_to_gcs()
+    dc.upload_csvs_as_parquet()
 
 if __name__ == "__main__":
     main()
