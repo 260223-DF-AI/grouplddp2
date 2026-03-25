@@ -2,7 +2,9 @@
 Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage (GCS)
 """
 from models.sales_data import SalesData
+from models.benchmarking_report import get_function_duration
 from models.logger import get_logger
+from instances import reporter
 from dotenv import load_dotenv
 import pandas as pd
 import csv
@@ -13,17 +15,13 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from google.cloud import storage
 
-
-logger = get_logger(__name__, 'error.log')
-
 class DataConversion:
-    logger = get_logger(__name__)
+    logger = get_logger(__name__, 'error.log')
 
     def __init__(self):
         self.gcs_uri_prefix = None
         self.gc_auth = None
         self.set_up_environment()
-
 
     def set_up_environment(self):
         """ Sets up the environment"""
@@ -79,6 +77,7 @@ class DataConversion:
         blob.metadata = metadata
         blob.patch()
 
+    @get_function_duration(reporter, 'u') # captures upload speed for reporting
     def upload_csvs_as_parquet(self):
         """Stream CSVs to GCS as Parquet files with content validation"""
         fs = fsspec.filesystem("gcs")
@@ -87,7 +86,9 @@ class DataConversion:
         with os.scandir(directory_path) as batches:
             for idx, batch in enumerate(batches, start=1):
                 if batch.name.endswith('.csv'):
+                    reporter.add_to_csv_size(os.path.getsize(batch)) # captures file size for reporting
                     self.logger.info(f"Processing CSV: {batch.path}")
+                    
                     df = self._validate_csv(batch.path)
                     if df.empty:
                         self.logger.info(f"No valid rows found in {batch.name}, skipping.")
@@ -98,16 +99,19 @@ class DataConversion:
 
                     # Construct GCS file URI
                     gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"dummy_sales_batch_{idx:02d}.parquet")
-
+                    
                     # Check if file already exists with same content
                     if self._gcs_file_has_same_content(fs, gcs_file_uri, df_hash):
                         self.logger.info(f"Skipping upload; content unchanged: {gcs_file_uri}")
+                        reporter.add_to_parquet_size(gcs_file_uri) # captures file size for reporting
                         continue
 
                     # Upload DataFrame to Parquet in-memory
                     with fs.open(gcs_file_uri, 'wb') as f:
                         df.to_parquet(f, engine='pyarrow', index=False)
-
+                        
+                    reporter.add_to_parquet_size(gcs_file_uri) # captures file size for reporting
+                        
                     # Update metadata with hash
                     fs.invalidate_cache()
                     self.update_gcs_metadata(gcs_file_uri, {"dataframe_hash": df_hash})
@@ -137,3 +141,4 @@ class DataConversion:
 
                 except Exception as e:
                     self.logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
+        return pd.DataFrame(rows, columns=SalesData.columns)

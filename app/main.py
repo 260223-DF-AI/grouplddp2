@@ -1,13 +1,9 @@
 ## example code from Rich's lecture
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-import os
-from dotenv import load_dotenv
-from models.logger import get_logger
-
-from app.routers import queryrouter
-from app.data_conversion import DataConversion
+from routers import queryrouter
+from instances import reporter
+from data_conversion import DataConversion
 
 app = FastAPI(
     title= "BigQuery API",
@@ -44,6 +40,8 @@ def main():
     """
     dc = DataConversion()
     dc.upload_csvs_as_parquet()
+    
+    reporter.create_audit_log()
 
 if __name__ == "__main__":
     main()

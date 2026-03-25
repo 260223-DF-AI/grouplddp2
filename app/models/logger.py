@@ -8,6 +8,9 @@ def get_logger(name, log_name):
     if logger.handlers:
         return logger
 
+    # Set logger level
+    logger.setLevel(logging.INFO)
+
     # Create handlers
     file_handler = logging.FileHandler(log_name, mode='w')
 
