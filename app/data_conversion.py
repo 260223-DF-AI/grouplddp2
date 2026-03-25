@@ -121,7 +121,7 @@ class DataConversion:
                     df_hash = self._dataframe_hash(df)
 
                     # Construct GCS file URI
-                    gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"part-{idx:03d}.parquet")
+                    gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"dummy_sales_batch_{idx:02d}.parquet")
 
                     # Check if file already exists with same content
                     if self._gcs_file_has_same_content(fs, gcs_file_uri, df_hash):
