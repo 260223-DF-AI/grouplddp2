@@ -1,9 +1,0 @@
-2026-03-25 14:53:22,218 - INFO - ============================================
-                    BENCHMARKING REPORT
-        ============================================
-        Total CSV Size: 192.28 MB
-        Total Parquet Size: 31.95 MB    
-        ---    
-        Disk Space Savings:     83.39%
-        Upload Speed:           25.12 s
-        Query Access Duration:  0.00(s)
