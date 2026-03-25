@@ -8,6 +8,10 @@ import pandas as pd
 import csv
 import os
 import fsspec
+import hashlib
+import pyarrow as pa
+import pyarrow.parquet as pq
+from google.cloud import storage
 
 
 class DataConversion:
@@ -38,14 +42,6 @@ class DataConversion:
 
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.gc_auth
 
-    def upload_to_gcs(self):
-        """ Uploads .csv file to GCS"""
-        try:
-            self._read_and_clean_data().to_parquet(self.gcs_uri, engine='pyarrow')
-            self.logger.info(f"Parquet saved to {self.gcs_uri}")
-        except Exception as e:
-            self.logger.error(f"An error occurred: {e}")
-
     def _validate_csv(self, input_path: str) -> pd.DataFrame:
         """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
 
@@ -70,23 +66,75 @@ class DataConversion:
 
         return pd.DataFrame(rows, columns=SalesData.columns)
 
+    def _dataframe_hash(self, df: pd.DataFrame) -> str:
+        """Generate deterministic MD5 hash for a DataFrame"""
+        table = pa.Table.from_pandas(df)
+        sink = pa.BufferOutputStream()
+        pq.write_table(table, sink)  # write in-memory
+        buf = sink.getvalue().to_pybytes()
+        return hashlib.md5(buf).hexdigest()
+
+    def _gcs_file_has_same_content(self, fs, gcs_file_uri: str, df_hash: str) -> bool:
+        """Check if a Parquet file in GCS already has the same content hash"""
+        try:
+            info = fs.info(gcs_file_uri)
+            remote_hash = info.get("metadata", {}).get("dataframe_hash")
+            return remote_hash == df_hash
+        except FileNotFoundError:
+            return False
+
+    def update_gcs_metadata(self, gcs_file_uri, metadata):
+        """
+        Update the metadata of a GCS object.
+        gcs_file_uri example: gs://bucket_name/path/to/file.parquet
+        """
+        # Extract bucket and blob
+        if not gcs_file_uri.startswith("gs://"):
+            raise ValueError("GCS URI must start with gs://")
+        parts = gcs_file_uri[5:].split("/", 1)
+        bucket_name = parts[0]
+        blob_name = parts[1]
+
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+
+        # Update metadata
+        blob.metadata = metadata
+        blob.patch()
+
     def upload_csvs_as_parquet(self):
-        """Processes all CSVs individually and writes them as separate Parquet files to GCS"""
+        """Stream CSVs to GCS as Parquet files with content validation"""
+        fs = fsspec.filesystem("gcs")
         directory_path = '../data/'
-        fs = fsspec.filesystem("gcs")  # requires gcsfs
 
         with os.scandir(directory_path) as batches:
             for idx, batch in enumerate(batches, start=1):
                 if batch.name.endswith('.csv'):
                     self.logger.info(f"Processing CSV: {batch.path}")
-                    cleaned_df = self._validate_csv(batch.path)
+                    df = self._validate_csv(batch.path)
+                    if df.empty:
+                        self.logger.info(f"No valid rows found in {batch.name}, skipping.")
+                        continue
 
-                    # Construct GCS URI for each Parquet file
-                    gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"dummy_sales_batch_{idx:02d}.parquet")
+                    # Compute hash
+                    df_hash = self._dataframe_hash(df)
 
-                    # Write directly to GCS
+                    # Construct GCS file URI
+                    gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"part-{idx:03d}.parquet")
+
+                    # Check if file already exists with same content
+                    if self._gcs_file_has_same_content(fs, gcs_file_uri, df_hash):
+                        self.logger.info(f"Skipping upload; content unchanged: {gcs_file_uri}")
+                        continue
+
+                    # Upload DataFrame to Parquet in-memory
                     with fs.open(gcs_file_uri, 'wb') as f:
-                        cleaned_df.to_parquet(f, engine='pyarrow', index=False)
+                        df.to_parquet(f, engine='pyarrow', index=False)
+
+                    # Update metadata with hash
+                    fs.invalidate_cache()
+                    self.update_gcs_metadata(gcs_file_uri, {"dataframe_hash": df_hash})
 
                     self.logger.info(f"Uploaded {gcs_file_uri}")
                 else:
