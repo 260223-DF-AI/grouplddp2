@@ -1,14 +1,11 @@
 import base64
 import hashlib
 import os
-
 from dotenv import load_dotenv
 from google.cloud import storage
 
-
 load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
 
 def calculate_local_md5(file_path):
     """Calculates the MD5 hash of a local file."""
@@ -38,7 +35,7 @@ def check_if_file_unique(bucket_name, source_file_name, destination_file_name):
         gcs_md5_hash = blob.md5_hash
         print(f"GCS object MD5 hash (Base64): {gcs_md5_hash}")
 
-         # 3. Compare hashes
+        # 3. Compare hashes
         if local_md5_hash == gcs_md5_hash:
             print("Content is identical. Skipping processing/upload.")
             return False
