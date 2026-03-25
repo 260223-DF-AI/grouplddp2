@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 import pandas as pd
 import csv
 import os
+import fsspec
+
 
 class DataConversion:
 
     logger = get_logger(__name__)
-    gcs_uri = None
-    gc_auth = None
+
+    def __init__(self):
+        self.gcs_uri_prefix = None
+        self.gc_auth = None
+        self.set_up_environment()
 
 
     def set_up_environment(self):
@@ -21,17 +26,17 @@ class DataConversion:
         load_dotenv()
 
         # uri to the GCS bucket location
-        gcs_uri = os.getenv("GCS_URI")
+        self.gcs_uri_prefix = os.getenv("GCS_URI")
         # path to the file with your GCS credentials
-        gc_auth = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        self.gc_auth = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-        if gcs_uri is None:
+        if not self.gcs_uri_prefix:
             self.logger.error("GCS_URI environment variable not found. Check .env file and README.md for setup help.")
-        if gc_auth is None:
+        if not self.gc_auth:
             self.logger.error(
                 "GOOGLE_APPLICATION_CREDENTIALS environment variable not found. Check .env file and README.md for setup help.")
 
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gc_auth
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.gc_auth
 
     def upload_to_gcs(self):
         """ Uploads .csv file to GCS"""
@@ -65,26 +70,24 @@ class DataConversion:
 
         return pd.DataFrame(rows, columns=SalesData.columns)
 
-    def _read_and_clean_data(self) -> pd.DataFrame:
-        """ Helper function to read .csv files from ../data/, cleans the data and return as a DataFrame
-
-        Returns:
-            pd.DataFrame: .csv data cleaned and validated
-        """
+    def upload_csvs_as_parquet(self):
+        """Processes all CSVs individually and writes them as separate Parquet files to GCS"""
         directory_path = '../data/'
-        df = pd.DataFrame()
-        # combine multiple .csv files
-        with os.scandir(directory_path) as batches:
-            for batch in batches:
-                if batch.name.endswith('.csv'):
-                    self.logger.info(f"Validating file: {batch.path}")
-                    cleaned_batch = self._validate_csv(batch.path)
+        fs = fsspec.filesystem("gcs")  # requires gcsfs
 
-                    if df.empty:
-                        df = cleaned_batch
-                    else:
-                        df = pd.concat([df, cleaned_batch])
+        with os.scandir(directory_path) as batches:
+            for idx, batch in enumerate(batches, start=1):
+                if batch.name.endswith('.csv'):
+                    self.logger.info(f"Processing CSV: {batch.path}")
+                    cleaned_df = self._validate_csv(batch.path)
+
+                    # Construct GCS URI for each Parquet file
+                    gcs_file_uri = os.path.join(self.gcs_uri_prefix, f"dummy_sales_batch_{idx:02d}.parquet")
+
+                    # Write directly to GCS
+                    with fs.open(gcs_file_uri, 'wb') as f:
+                        cleaned_df.to_parquet(f, engine='pyarrow', index=False)
+
+                    self.logger.info(f"Uploaded {gcs_file_uri}")
                 else:
-                    print(f"{batch.name} is not a csv")
-                    break
-        return df
+                    self.logger.info(f"Skipping non-CSV file: {batch.name}")
