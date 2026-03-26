@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from routers import queryrouter
-from app.models.instances import reporter
+from models.instances import reporter
 from services.gcs import GCS
 
 app = FastAPI(

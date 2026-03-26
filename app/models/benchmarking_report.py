@@ -1,6 +1,6 @@
 # Benchmarking report showing: Disk Space Savings (%), Upload speed (s), Query Access duration (s).
 from functools import wraps
-from models.logger import get_logger
+from app.models.logger import get_logger
 import fsspec
 import time
 
@@ -19,9 +19,9 @@ def get_function_duration(benchmark_instance: BenchmarkData, flag: str):
             """TimerWrapper Docstring"""
             start = time.time()
             result = func(*args, **kwargs)
-            if flag is 'u':
+            if flag == 'u':
                 benchmark_instance.upload_speed = time.time() - start
-            if flag is 'q':
+            if flag == 'q':
                 benchmark_instance.query_access_duration = time.time() - start
             return result
         return TimerWrapper
