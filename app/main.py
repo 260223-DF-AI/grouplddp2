@@ -1,17 +1,8 @@
-## example code from Rich's lecture
 from fastapi import FastAPI
-from google.cloud import bigquery
 from pydantic import BaseModel
-
-def get_bq_client():
-    """Provides a BigQuery client instance."""
-    # The client automatically handles authentication if ADC is set up
-    with bigquery.Client() as client:
-        yield client
-
-
-#t aclient = bigquery.Client()
-from app.routers import queryrouter
+from routers import queryrouter
+from app.models.instances import reporter
+from services.gcs import GCS
 
 app = FastAPI(
     title= "BigQuery API",
