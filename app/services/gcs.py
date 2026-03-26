@@ -1,22 +1,25 @@
 """
 Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage (GCS)
 """
-from models.sales_data import SalesData
-from models.benchmarking_report import get_function_duration
-from models.logger import get_logger
-from models.instances import reporter
+from app.models.sales_data import SalesData
+from app.models.benchmarking_report import get_function_duration
+from app.models.logger import get_logger
+from app.models.instances import reporter
 from dotenv import load_dotenv
 import pandas as pd
 import csv
 import os
 import fsspec
 import hashlib
+import logging
 import pyarrow as pa
 import pyarrow.parquet as pq
 from google.cloud import storage
 
 class GCS:
-    logger = get_logger(__name__, 'error.log')
+    info_logger = get_logger("info", "info.log", logging.INFO)
+    error_logger = get_logger("error", "error.log", logging.ERROR)
+
 
     def __init__(self):
         self.gcs_uri_prefix = None
@@ -33,9 +36,9 @@ class GCS:
         self.gc_auth = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
         if not self.gcs_uri_prefix:
-            self.logger.error("GCS_URI environment variable not found. Check .env file and README.md for setup help.")
+            self.error_logger.error("GCS_URI environment variable not found. Check .env file and README.md for setup help.")
         if not self.gc_auth:
-            self.logger.error(
+            self.error_logger.error(
                 "GOOGLE_APPLICATION_CREDENTIALS environment variable not found. Check .env file and README.md for setup help.")
 
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.gc_auth
@@ -70,11 +73,11 @@ class GCS:
             for idx, batch in enumerate(batches, start=1):
                 if batch.name.endswith('.csv'):
                     reporter.add_to_csv_size(os.path.getsize(batch)) # captures file size for reporting
-                    self.logger.info(f"Processing CSV: {batch.path}")
+                    self.info_logger.info(f"Processing CSV: {batch.path}")
                     
                     df = self._validate_csv(batch.path)
                     if df.empty:
-                        self.logger.info(f"No valid rows found in {batch.name}, skipping.")
+                        self.info_logger.info(f"No valid rows found in {batch.name}, skipping.")
                         continue
 
                     # Compute hash
@@ -85,7 +88,7 @@ class GCS:
                     
                     # Check if file already exists with same content
                     if self._gcs_file_has_same_content(fs, gcs_file_uri, df_hash):
-                        self.logger.info(f"Skipping upload; content unchanged: {gcs_file_uri}")
+                        self.info_logger.info(f"Skipping upload; content unchanged: {gcs_file_uri}")
                         reporter.add_to_parquet_size(gcs_file_uri) # captures file size for reporting
                         continue
 
@@ -99,10 +102,10 @@ class GCS:
                     fs.invalidate_cache()
                     self.update_gcs_metadata(gcs_file_uri, {"dataframe_hash": df_hash})
 
-                    self.logger.info(f"Uploaded {gcs_file_uri}")
+                    self.info_logger.info(f"Uploaded {gcs_file_uri}")
                 else:
-                    self.logger.info(f"Skipping non-CSV file: {batch.name}")
-    
+                    self.info_logger.info(f"Skipping non-CSV file: {batch.name}")
+
     def _dataframe_hash(self, df: pd.DataFrame) -> str:
         """Generate deterministic MD5 hash for a DataFrame"""
         table = pa.Table.from_pandas(df)
@@ -120,7 +123,7 @@ class GCS:
         except FileNotFoundError:
             return False
 
-    
+
     def _validate_csv(self, input_path: str) -> pd.DataFrame:
         """ Helper function to validate a .csv file row by row. Returned valid records as a DataFrame and logs invalid records to error log
 
@@ -141,6 +144,5 @@ class GCS:
                     rows.append(record.to_row()) # adds valid record to list
 
                 except Exception as e:
-                    self.logger.error(f"InvalidType: {e}\n Record: {row}") # adds invalid records to log
-        
+                    self.error_logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
         return pd.DataFrame(rows, columns=SalesData.columns)

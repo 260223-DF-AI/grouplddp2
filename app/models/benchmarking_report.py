@@ -1,6 +1,7 @@
 # Benchmarking report showing: Disk Space Savings (%), Upload speed (s), Query Access duration (s).
 from functools import wraps
 from app.models.logger import get_logger
+import logging
 import fsspec
 import time
 
@@ -47,7 +48,7 @@ class BenchmarkData():
     # sums file size across all .csv and .parquet files
     def add_to_csv_size(self, size: int):
         self.csv_size += size
-        
+
     def add_to_parquet_size(self, gcs_uri: str):
         fs = fsspec.filesystem("gcs")
         info = fs.info(gcs_uri)
@@ -55,7 +56,7 @@ class BenchmarkData():
         self.parquet_size += info['size']
     
     def create_audit_log(self):
-        logger = get_logger(__name__, 'audit.log')
+        logger = get_logger('audit', 'audit.log', logging.INFO)
         
         report = f"""
         
