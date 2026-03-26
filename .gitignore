@@ -12,3 +12,4 @@ credentials/
 
 /app/**/*.log
 *.log
+.coverage
