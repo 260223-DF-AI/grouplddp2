@@ -34,33 +34,20 @@ BQClient = get_bq_client()
 client = bigquery.Client()
 
 
-# localhost:{port_num}/example/
-#@router.get("/")
-#def get_query_root():
-#    return {"message": "Hello from example"}
-
 def get_bq_client():
     """Provides a BigQuery client instance."""
     # The client automatically handles authentication if ADC is set up
     with bigquery.Client() as client:
         yield client
 
-
-@router.get("/", response_model=List[Dict[str, Any]])
-async def get_transaction(params: DataQueryParams = Depends()):
-    """
-    Queries BigQuery for select columns of a specific category
-    """
-    if params.select_column == "all":
-        columns = "*"
-    else:
-        columns = params.select_column
+@router.get("/segments",response_model=List[Dict[str, Any]])
+async def get_segments():
 
     query = f"""
-    SELECT {columns}
+    SELECT Segment, SUM(TotalAmount) AS total_amount
     FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
-    WHERE Category = @category
-    LIMIT 100
+    GROUP BY Segment
+    ORDER BY SUM(TotalAmount) DESC
     """
 
     # Use query parameters to prevent SQL injection
@@ -68,7 +55,7 @@ async def get_transaction(params: DataQueryParams = Depends()):
         query_parameters=[
             # Define a scalar query parameter, specifying name, type, and value
             #bigquery.ScalarQueryParameter("select", "STRING", params.select),
-            bigquery.ScalarQueryParameter("category", "STRING", params.where),
+           # bigquery.ScalarQueryParameter("category", "STRING", product_name),
         ]
     )
 
@@ -88,6 +75,84 @@ async def get_transaction(params: DataQueryParams = Depends()):
         # Log the error and return a generic server error
         print(f"Error querying BigQuery: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/topproducts", response_model=List[Dict[str, Any]])
+async def get_products():
+
+    query = f"""
+    SELECT ProductName, SUM(Quantity) AS items_sold, SUM(TotalAmount) AS total_amount
+    FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
+    GROUP BY ProductName
+    ORDER BY SUM(TotalAmount) DESC
+    """
+
+    # Use query parameters to prevent SQL injection
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            # Define a scalar query parameter, specifying name, type, and value
+            #bigquery.ScalarQueryParameter("select", "STRING", params.select),
+            #bigquery.ScalarQueryParameter("category", "STRING", product_name),
+        ]
+    )
+
+    try:
+        # Execute the query
+        query_job = client.query(query, job_config=job_config)
+
+        # Fetch results
+        results = [dict(row.items()) for row in query_job]
+
+        if not results:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        #return results
+        return [dict(row) for row in results]
+    except Exception as e:
+        # Log the error and return a generic server error
+        print(f"Error querying BigQuery: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+#Make a pytest to test this fastapi http request function:
+@router.get("/category", response_model=List[Dict[str, Any]])
+async def get_category(category_name: str):
+    """
+    Queries BigQuery for select columns of a specific category
+    """
+    query = f"""
+    SELECT Category, AVG(TotalAmount) AS avg_amount
+    FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
+    WHERE Category = @category
+    GROUP BY Category
+    """
+
+    # Use query parameters to prevent SQL injection
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            # Define a scalar query parameter, specifying name, type, and value
+            #bigquery.ScalarQueryParameter("select", "STRING", params.select),
+            bigquery.ScalarQueryParameter("category", "STRING", category_name),
+        ]
+    )
+
+    try:
+        # Execute the query
+        query_job = client.query(query, job_config=job_config)
+
+        # Fetch results
+        results = [dict(row.items()) for row in query_job]
+
+        if not results:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        #return results
+        print ([dict(row) for row in results])
+        return [dict(row) for row in results]
+    except Exception as e:
+        # Log the error and return a generic server error
+        print(f"Error querying BigQuery: {e}")
+        raise HTTPException(status_code=404, detail="Item not found")
 
 router.get("/exception")
 def get_exception():
