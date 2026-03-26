@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from routers import queryrouter
-from instances import reporter
+from app.instances import reporter
 from services.gcs import GCS
 
 app = FastAPI(
@@ -40,7 +40,7 @@ def main():
     """
     gcs = GCS()
     gcs.upload_csvs_as_parquet()
-    
+
     reporter.create_audit_log()
 
 if __name__ == "__main__":
