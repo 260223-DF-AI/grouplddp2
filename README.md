@@ -14,7 +14,16 @@ In terminal:
 5. Search the 'Keys' page and add a new key
 6. In Python, create a .env file in the app directory
 7. Set GSC_URI='gs://<bucket name>/data/'
-8. Set GOOGLE_APPLICATION_CREDENTIALS='<path>/downloaded project key.json'
+8. Set GOOGLE_APPLICATION_CREDENTIALS='<path>/<downloaded project key>.json'
+
+## Setting up BigQuery
+
+1. Create a new query in the form of:
+CREATE OR REPLACE EXTERNAL TABLE `project-<extension>.analytics_lab.dummy_sales_batch_ext`
+OPTIONS (
+  format = 'PARQUET',
+  uris = ['gs://<bucket name>/data/dummy_sales_batch_*.parquet']
+);
 
 
 ## Dev Tips:
