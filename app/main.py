@@ -1,20 +1,35 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from app.routers import queryrouter
+from app.models.benchmarking_report import get_function_duration
 from app.models.instances import reporter
 from app.services.gcs import GCS
 import bigquery
 import requests
 
+def main():
+    """Creates and uploads .parquet files to GCS
+    """
+    send_queries()
+    gcs = GCS()
+    gcs.upload_csvs_as_parquet()
+    reporter.create_audit_log()
 
+if __name__ == "__main__":
+    main()
+    
+@get_function_duration(reporter, 'q') # captures query access duration for reporting
+def send_queries():
+    requests.get("http://127.0.0.1:8000/query/segments")
+    requests.get("http://127.0.0.1:8000/query/topproducts")
+    requests.get("http://127.0.0.1:8000/query/category?category_name=Furniture")
 
-
+# Needed for tests
 def get_bq_client():
     """Provides a BigQuery client instance."""
     # The client automatically handles authentication if ADC is set up
     with bigquery.Client() as client:
         yield client
-
 
 app = FastAPI(
     title= "BigQuery API",
@@ -45,16 +60,3 @@ async def process_gcs_file(request: GCSPathRequest):
         "status": "success",
         "message": f"Processing file at {GCS_URI}"
     }
-
-def main():
-    """Creates and uploads .parquet files to GCS
-    """
-    requests.get("http://127.0.0.1:8000/query/segments")
-    requests.get("http://127.0.0.1:8000/query/topproducts")
-    requests.get("http://127.0.0.1:8000/query/category?category_name=Furniture")
-    gcs = GCS()
-    gcs.upload_csvs_as_parquet()
-    reporter.create_audit_log()
-
-if __name__ == "__main__":
-    main()

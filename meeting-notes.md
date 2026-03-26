@@ -1,3 +1,11 @@
+## 03/26/26
+All will: work on presentation
+| Team Member | Done 
+|----|----|
+|Dylan| Added tests and additional queries
+|Danielle| Added tests, reviewed validation
+|Lucas| Finished buffers, added info log, verified everything runs for presentation time
+
 ## 03/25/26
 | Team Member | Done | Will do
 |----|----|----|
@@ -11,12 +19,14 @@
 | Dylan | Researched checksum guard, found it's implicit in to_parquet() | Expand on BigQuery API implementation |
 | Danielle | Started benchmarking report code | Finish report, waiting on query finalization |
 | Lucas | Researched dynamic schema, found it's implicit. Refactored data_conversion.py to class format |  Work on streaming buffers |
+
 ## 03/23/26
 | Team Member | Done | Will do
 |----|----|----|
 | Dylan | Implemented FastAPI | Add duplication guard and streaming buffers to GCS
 | Danielle | Implemented data validation and error logging | Make benchmarking report
 | Lucas |  - | Dynamically create schema for BigQuery, refactor main.py 
+
 ## 03/20/26
 | Team Member | Done | Will do
 |----|----|----|
