@@ -2,6 +2,9 @@
 from fastapi import FastAPI
 from google.cloud import bigquery
 from pydantic import BaseModel
+from routers import queryrouter
+from app.instances import reporter
+from services.gcs import GCS
 
 def get_bq_client():
     """Provides a BigQuery client instance."""
@@ -9,9 +12,6 @@ def get_bq_client():
     with bigquery.Client() as client:
         yield client
 
-
-#t aclient = bigquery.Client()
-from app.routers import queryrouter
 
 app = FastAPI(
     title= "BigQuery API",
@@ -48,7 +48,7 @@ def main():
     """
     gcs = GCS()
     gcs.upload_csvs_as_parquet()
-    
+
     reporter.create_audit_log()
 
 if __name__ == "__main__":
