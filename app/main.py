@@ -25,10 +25,8 @@ app.include_router(queryrouter.router)
 def get_root():
     return {"message": "Hello"}
 
-
 class GCSPathRequest(BaseModel):
     gcs_path: str
-
 
 @app.post("/process-gcs-file")
 async def process_gcs_file(request: GCSPathRequest):
@@ -44,3 +42,14 @@ async def process_gcs_file(request: GCSPathRequest):
         "status": "success",
         "message": f"Processing file at {path}"
     }
+
+def main():
+    """Creates and uploads .parquet files to GCS
+    """
+    gcs = GCS()
+    gcs.upload_csvs_as_parquet()
+    
+    reporter.create_audit_log()
+
+if __name__ == "__main__":
+    main()

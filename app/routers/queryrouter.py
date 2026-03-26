@@ -33,7 +33,6 @@ BQClient = get_bq_client()
 
 client = bigquery.Client()
 
-
 def get_bq_client():
     """Provides a BigQuery client instance."""
     # The client automatically handles authentication if ADC is set up

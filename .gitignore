@@ -9,3 +9,6 @@ __pycache__
 .idea/
 .env
 credentials/
+
+/app/**/*.log
+*.log

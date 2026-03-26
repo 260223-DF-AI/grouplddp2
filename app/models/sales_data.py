@@ -136,7 +136,7 @@ class SalesData():
         )
     
     def _validate(self):
-        """Left function in as example - current data sets to not need validation beyond type conversion"""
+        """Left function in as example - current data sets do not need validation beyond type conversion"""
         if self.date > datetime.now():
             raise ValueError(f"Date must be equal to or prior than toady's date: {datetime.now().date()}")
         if len(self.state) != 2:
