@@ -3,6 +3,11 @@ from pydantic import BaseModel
 from app.routers import queryrouter
 from app.models.instances import reporter
 from app.services.gcs import GCS
+import bigquery
+import requests
+
+
+
 
 def get_bq_client():
     """Provides a BigQuery client instance."""
@@ -44,9 +49,11 @@ async def process_gcs_file(request: GCSPathRequest):
 def main():
     """Creates and uploads .parquet files to GCS
     """
+    requests.get("http://127.0.0.1:8000/query/segments")
+    requests.get("http://127.0.0.1:8000/query/topproducts")
+    requests.get("http://127.0.0.1:8000/query/category?category_name=Furniture")
     gcs = GCS()
     gcs.upload_csvs_as_parquet()
-
     reporter.create_audit_log()
 
 if __name__ == "__main__":
