@@ -1,10 +1,10 @@
 """
 Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage (GCS)
 """
-from models.sales_data import SalesData
-from models.benchmarking_report import get_function_duration
-from models.logger import get_logger
-from instances import reporter
+from app.models.sales_data import SalesData
+from app.models.benchmarking_report import get_function_duration
+from app.models.logger import get_logger
+from app.instances import reporter
 from dotenv import load_dotenv
 import pandas as pd
 import csv
