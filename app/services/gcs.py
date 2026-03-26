@@ -4,14 +4,14 @@ Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage
 from app.models.sales_data import SalesData
 from app.models.benchmarking_report import get_function_duration
 from app.models.logger import get_logger
-import logging
-from app.instances import reporter
+from app.models.instances import reporter
 from dotenv import load_dotenv
 import pandas as pd
 import csv
 import os
 import fsspec
 import hashlib
+import logging
 import pyarrow as pa
 import pyarrow.parquet as pq
 from google.cloud import storage
@@ -67,7 +67,7 @@ class GCS:
     def upload_csvs_as_parquet(self):
         """Stream CSVs to GCS as Parquet files with content validation"""
         fs = fsspec.filesystem("gcs")
-        directory_path = '../data/'
+        directory_path = 'data/'
 
         with os.scandir(directory_path) as batches:
             for idx, batch in enumerate(batches, start=1):

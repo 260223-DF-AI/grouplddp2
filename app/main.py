@@ -1,9 +1,7 @@
-## example code from Rich's lecture
 from fastapi import FastAPI
-from google.cloud import bigquery
 from pydantic import BaseModel
 from app.routers import queryrouter
-from app.instances import reporter
+from app.models.instances import reporter
 from app.services.gcs import GCS
 
 def get_bq_client():
