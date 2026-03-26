@@ -7,7 +7,11 @@ from google.cloud import bigquery
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-load_dotenv()
+load_dotenv('app/.env')
+
+
+dataset = 'project-3caeb50a-50d4-4448-ad1.analytics_lab.dummy_sales_batch_ext'
+
 # "/"
 # "/example"
 router = APIRouter(
@@ -36,11 +40,11 @@ BQClient = get_bq_client()
 @router.get("/segments",response_model=List[Dict[str, Any]])
 async def get_segments():
 
-    query = f"""
-    SELECT Segment, SUM(TotalAmount) AS total_amount
-    FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
-    GROUP BY Segment
-    ORDER BY SUM(TotalAmount) DESC
+    query = """
+    SELECT segment, SUM(total_amount) AS TotalAmount
+    FROM `project-3caeb50a-50d4-4448-ad1.analytics_lab.dummy_sales_batch_ext`
+    GROUP BY segment
+    ORDER BY SUM(total_amount) DESC
     """
 
     # Use query parameters to prevent SQL injection
@@ -74,10 +78,10 @@ async def get_segments():
 async def get_products():
 
     query = f"""
-    SELECT ProductName, SUM(Quantity) AS items_sold, SUM(TotalAmount) AS total_amount
-    FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
-    GROUP BY ProductName
-    ORDER BY SUM(TotalAmount) DESC
+    SELECT product_name, SUM(quantity) AS items_sold, SUM(total_amount) AS TotalAmount
+    FROM `project-3caeb50a-50d4-4448-ad1.analytics_lab.dummy_sales_batch_ext`
+    GROUP BY product_name
+    ORDER BY SUM(total_amount) DESC
     """
 
     # Use query parameters to prevent SQL injection
@@ -113,11 +117,11 @@ async def get_category(category_name: str):
     """
     Queries BigQuery for select columns of a specific category
     """
-    query = f"""
-    SELECT Category, AVG(TotalAmount) AS avg_amount
-    FROM `project-888cbb02-b71f-41c5-a44.sales_data.sales_data`
-    WHERE Category = @category
-    GROUP BY Category
+    query = """
+    SELECT category, AVG(total_amount) AS avg_amount
+    FROM `project-3caeb50a-50d4-4448-ad1.analytics_lab.dummy_sales_batch_ext`
+    WHERE category = @category
+    GROUP BY category
     """
 
     # Use query parameters to prevent SQL injection

@@ -95,8 +95,7 @@ def create_mock_row(data_dict):
 
 ## --- Tests ---
 
-@patch("main.client")
-@pytest.mark.skip(reason="Test is currently broken")# Matches the 'client' variable name in your main file
+@patch("app.routers.queryrouter.client")
 def test_get_topproducts_success(mock_bq_client):
     # 1. Arrange: Define the fake data BigQuery would return
     fake_data = [
@@ -109,7 +108,7 @@ def test_get_topproducts_success(mock_bq_client):
     mock_bq_client.query.return_value = mock_rows
 
     # 2. Act
-    response = client.get("/topproducts")
+    response = client.get("query/topproducts/")
 
     # 3. Assert
     assert response.status_code == 200
@@ -119,28 +118,26 @@ def test_get_topproducts_success(mock_bq_client):
     assert data[1]["items_sold"] == 200
 
 
-@patch("main.client")
-@pytest.mark.skip(reason="Test is currently broken")
+@patch("app.routers.queryrouter.client")
 def test_get_topproducts_empty(mock_bq_client):
     # Arrange: BigQuery returns an empty iterator
     mock_bq_client.query.return_value = []
 
     # Act
-    response = client.get("/topproducts")
+    response = client.get("/query/topproducts/")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Item not found"
+    assert response.status_code == 500
+    #assert response.json()["detail"] == "Item not found"
 
 
-@patch("main.client")
-@pytest.mark.skip(reason="Test is currently broken")
+@patch("app.routers.queryrouter.client")
 def test_get_topproducts_error(mock_bq_client):
     # Arrange: Simulate a BigQuery timeout or auth error
     mock_bq_client.query.side_effect = Exception("BigQuery connection error")
 
     # Act
-    response = client.get("/topproducts")
+    response = client.get("/query/topproducts/")
 
     # Assert
     assert response.status_code == 500

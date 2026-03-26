@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from routers import queryrouter
+from app.routers import queryrouter
 from app.models.instances import reporter
-from services.gcs import GCS
+from app.services.gcs import GCS
 
 def get_bq_client():
     """Provides a BigQuery client instance."""
@@ -29,16 +29,16 @@ class GCSPathRequest(BaseModel):
 @app.post("/process-gcs-file")
 async def process_gcs_file(request: GCSPathRequest):
     # The GCS path is now accessible via request.gcs_path
-    path = request.gcs_path
+    GCS_URI = request.gcs_path
 
     # Typically, you would pass this path to the
     # google-cloud-storage library here.
 
-    print(f"Received GCS path: {path}")
+    print(f"Received GCS path: {GCS_URI}")
 
     return {
         "status": "success",
-        "message": f"Processing file at {path}"
+        "message": f"Processing file at {GCS_URI}"
     }
 
 def main():
