@@ -4,7 +4,7 @@ Script to  transform .csv to .parquet and then pipe data to Google Cloud Storage
 from models.sales_data import SalesData
 from models.benchmarking_report import get_function_duration
 from models.logger import get_logger
-from instances import reporter
+from app.models.instances import reporter
 from dotenv import load_dotenv
 import pandas as pd
 import csv
@@ -141,5 +141,6 @@ class GCS:
                     rows.append(record.to_row()) # adds valid record to list
 
                 except Exception as e:
-                    self.logger.error(f"Error: {e}\n Record: {row}") # adds invalid records to log
+                    self.logger.error(f"InvalidType: {e}\n Record: {row}") # adds invalid records to log
+        
         return pd.DataFrame(rows, columns=SalesData.columns)

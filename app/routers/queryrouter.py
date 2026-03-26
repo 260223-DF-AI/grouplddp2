@@ -23,14 +23,6 @@ class DataQueryParams(BaseModel):
     select_column: AllowedColumns = Field("all", description="Column to select, or 'all' for all columns")
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-def get_bq_client():
-    """Provides a BigQuery client instance."""
-    # The client automatically handles authentication if ADC is set up
-    with bigquery.Client() as client:
-        yield client
-
-BQClient = get_bq_client()
-
 client = bigquery.Client()
 
 def get_bq_client():
@@ -39,6 +31,7 @@ def get_bq_client():
     with bigquery.Client() as client:
         yield client
 
+BQClient = get_bq_client()
 
 @router.get("/", response_model=List[Dict[str, Any]])
 async def get_transaction(params: DataQueryParams = Depends()):
